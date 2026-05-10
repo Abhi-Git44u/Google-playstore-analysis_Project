@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Play Store — Market Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0d0f12;
+    --bg2: #13161b;
+    --bg3: #1a1e26;
+    --card: #1e222c;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f2f5;
+    --text2: #8b92a5;
+    --text3: #555f73;
+    --accent: #4f8ef7;
+    --green: #34d39a;
+    --amber: #f7a234;
+    --coral: #f7614f;
+    --purple: #9b7ef7;
+    --pink: #f76eb2;
+    --teal: #34c4d3;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    gap: 1rem;
+  }
+  .header-left { flex: 1; }
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+  h1 {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--text) 0%, #7ca7fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .header-sub {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .header-badge {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+    white-space: nowrap;
+    text-align: right;
+    line-height: 1.8;
+  }
+  .header-badge span { color: var(--accent); font-weight: 500; }
+
+  /* KPI cards */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .kpi:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+  }
+  .kpi:nth-child(1)::before { background: var(--accent); }
+  .kpi:nth-child(2)::before { background: var(--amber); }
+  .kpi:nth-child(3)::before { background: var(--green); }
+  .kpi:nth-child(4)::before { background: var(--purple); }
+  .kpi-icon { font-size: 20px; margin-bottom: 10px; }
+  .kpi-label { font-size: 11px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .kpi-value { font-size: 26px; font-weight: 600; letter-spacing: -0.03em; color: var(--text); margin-bottom: 3px; }
+  .kpi-sub { font-size: 12px; color: var(--text2); }
+
+  /* Section */
+  .section { margin-bottom: 2rem; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .section-tag {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--border2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .leg-item { display: flex; align-items: center; gap: 6px; }
+  .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* Sentiment bar */
+  .sent-bar-wrap { margin-bottom: 14px; }
+  .sent-bar {
+    display: flex;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    gap: 2px;
+    margin-bottom: 8px;
+  }
+  .sent-seg { border-radius: 3px; transition: opacity 0.2s; }
+  .sent-seg:hover { opacity: 0.8; }
+  .sent-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .sent-stat {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+  .sent-stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-family: 'DM Mono', monospace; }
+  .sent-stat-value { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+  .sent-stat-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* Top apps table */
+  .apps-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .apps-table th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+  }
+  .apps-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .apps-table tr:last-child td { border-bottom: none; }
+  .apps-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .rank-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    width: 28px;
+  }
+  .app-name { font-weight: 500; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+  .b-social { background: rgba(79,142,247,0.15); color: #7ab0fa; }
+  .b-game   { background: rgba(52,211,154,0.15); color: #34d39a; }
+  .b-tools  { background: rgba(247,162,52,0.15);  color: #f7a234; }
+  .b-comm   { background: rgba(155,126,247,0.15); color: #b59ef9; }
+  .b-video  { background: rgba(247,97,79,0.15);   color: #f98070; }
+  .rating-val { color: var(--amber); font-weight: 500; font-family: 'DM Mono', monospace; font-size: 12px; }
+  .review-count { color: var(--text2); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .install-count { color: var(--text2); font-size: 12px; }
+
+  /* Key findings */
+  .findings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .finding-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .finding-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .finding-icon { font-size: 22px; margin-bottom: 8px; }
+  .finding-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+  .finding-body { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+  /* Footer */
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+  .footer-right { text-align: right; }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 768px) {
+    h1 { font-size: 26px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3, .findings-grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; }
+    .header-badge { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="header reveal">
+    <div class="header-left">
+      <div class="eyebrow">Data Analytics · Project 4</div>
+      <h1>Unveiling the Android<br>App Market</h1>
+      <p class="header-sub">Analyzing Google Play Store data across 9,659 apps,<br>33 categories &amp; 64,295 user reviews.</p>
+    </div>
+    <div class="header-badge">
+      <div>Dataset <span>apps.csv + user_reviews.csv</span></div>
+      <div>Apps <span>9,659</span></div>
+      <div>Reviews <span>64,295</span></div>
+      <div>Categories <span>33</span></div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpis reveal">
+    <div class="kpi">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">Total Apps</div>
+      <div class="kpi-value">9,659</div>
+      <div class="kpi-sub">Across 33 categories</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-label">Avg Rating</div>
+      <div class="kpi-value">4.17</div>
+      <div class="kpi-sub">Out of 5.0</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">🆓</div>
+      <div class="kpi-label">Free Apps</div>
+      <div class="kpi-value">92.2%</div>
+      <div class="kpi-sub">Only 756 paid</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">📲</div>
+      <div class="kpi-label">Total Installs</div>
+      <div class="kpi-value">75.1B</div>
+      <div class="kpi-sub">Combined across all apps</div>
+    </div>
+  </div>
+
+  <!-- Category Distribution -->
+  <div class="section reveal">
+    <div class="section-header">
+      <div class="section-title">App distribution by category</div>
+      <div class="section-tag">top 12</div>
+    </div>
+    <div class="card">
+      <div style="position:relative;width:100%;height:260px">
+        <canvas id="catChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Installs + Ratings side by side -->
+  <div class="grid-2 section reveal">
+    <div>
+      <div class="section-header">
+        <div class="section-title">Total installs by category</div>
+        <div class="section-tag">top 8</div>
+      </div>
+      <div class="card">
+        <div style="position:relative;width:100%;height:300px">
+          <canvas id="installChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-header">
+        <div class="section-title">Highest-rated categories</div>
+        <div class="section-tag">avg ★</div>
+      </div>
+      <div class="card">
+        <div style="position:relative;width:100%;height:300px">
+          <canvas id="ratingCatChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Free vs Paid + Rating Distribution -->
+  <div class="grid-2 section reveal">
+    <div>
+      <div class="section-header">
+        <div class="section-title">Free vs paid apps</div>
+      </div>
+      <div class="card">
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#4f8ef7"></div>Free — 8,903 (avg 4.17★)</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#34d39a"></div>Paid — 756 (avg 4.26★)</div>
+        </div>
+        <div style="position:relative;width:100%;height:210px">
+          <canvas id="typeChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-header">
+        <div class="section-title">Rating distribution</div>
+      </div>
+      <div class="card">
+        <div style="position:relative;width:100%;height:250px">
+          <canvas id="ratingDistChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sentiment Analysis -->
+  <div class="section reveal">
+    <div class="section-header">
+      <div class="section-title">Sentiment analysis</div>
+      <div class="section-tag">37,432 classified reviews</div>
+    </div>
+    <div class="card">
+      <div class="sent-bar-wrap">
+        <div class="sent-bar">
+          <div class="sent-seg" style="width:64.1%;background:var(--green)"></div>
+          <div class="sent-seg" style="width:13.8%;background:var(--text3)"></div>
+          <div class="sent-seg" style="width:22.1%;background:var(--coral)"></div>
+        </div>
+        <div class="legend" style="margin-bottom:0">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Positive 64.1%</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--text3)"></div>Neutral 13.8%</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--coral)"></div>Negative 22.1%</div>
+        </div>
+      </div>
+      <div class="sent-stats">
+        <div class="sent-stat">
+          <div class="sent-stat-label">Positive</div>
+          <div class="sent-stat-value" style="color:var(--green)">23,998</div>
+          <div class="sent-stat-sub">avg polarity +0.37</div>
+        </div>
+        <div class="sent-stat">
+          <div class="sent-stat-label">Neutral</div>
+          <div class="sent-stat-value" style="color:var(--text2)">5,163</div>
+          <div class="sent-stat-sub">avg polarity 0.00</div>
+        </div>
+        <div class="sent-stat">
+          <div class="sent-stat-label">Negative</div>
+          <div class="sent-stat-value" style="color:var(--coral)">8,271</div>
+          <div class="sent-stat-sub">avg polarity −0.26</div>
+        </div>
+      </div>
+      <div style="position:relative;width:100%;height:200px;margin-top:20px">
+        <canvas id="sentChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Rating -->
+  <div class="section reveal">
+    <div class="section-header">
+      <div class="section-title">Content rating breakdown</div>
+    </div>
+    <div class="card">
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#4f8ef7"></div>Everyone — 81.8%</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#34d39a"></div>Teen — 10.7%</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f7a234"></div>Mature 17+ — 4.1%</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#9b7ef7"></div>Everyone 10+ — 3.3%</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#555f73"></div>Other — 0.1%</div>
+      </div>
+      <div style="position:relative;width:100%;height:220px">
+        <canvas id="contentChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Apps Table -->
+  <div class="section reveal">
+    <div class="section-header">
+      <div class="section-title">Top 10 apps by review count</div>
+    </div>
+    <div class="card">
+      <table class="apps-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>App</th>
+            <th>Category</th>
+            <th>Rating</th>
+            <th>Reviews</th>
+            <th>Installs</th>
+          </tr>
+        </thead>
+        <tbody id="appsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Key Findings -->
+  <div class="section reveal">
+    <div class="section-header">
+      <div class="section-title">Key insights</div>
+    </div>
+    <div class="findings-grid">
+      <div class="finding-card">
+        <div class="finding-icon">🎮</div>
+        <div class="finding-title">Games dominate installs</div>
+        <div class="finding-body">Despite not being the most numerous category, Games lead with 13.9B installs — nearly 2x Communication in second place.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">💸</div>
+        <div class="finding-title">Paid apps rate higher</div>
+        <div class="finding-body">Paid apps average 4.26★ vs 4.17★ for free apps. Quality filtering — users only pay for genuinely good apps.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">😊</div>
+        <div class="finding-title">Mostly positive sentiment</div>
+        <div class="finding-body">64.1% of reviews are positive (polarity +0.37). Only 22.1% negative, suggesting strong overall user satisfaction.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">👨‍👩‍👧</div>
+        <div class="finding-title">Family apps lead in count</div>
+        <div class="finding-body">Family category has 1,832 apps — nearly 2x Games (959). The Android market is strongly family-oriented by volume.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">🌐</div>
+        <div class="finding-title">Everyone-rated dominates</div>
+        <div class="finding-body">81.8% of apps are rated "Everyone" — the market heavily prioritizes broad accessibility over niche or mature content.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">📊</div>
+        <div class="finding-title">Ratings skew high</div>
+        <div class="finding-body">70.5% of apps have a 4★ rating or above. Median rating is 4.3★, showing the Play Store's strong quality floor.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer reveal">
+    <div>Data Analytics · Project 4 · Level 2</div>
+    <div class="footer-right">
+      Dataset: Google Play Store · 9,659 apps · 64,295 reviews<br>
+      Built with Chart.js
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Scroll reveal ──────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), 60);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── Chart defaults ─────────────────────────────────
+const T2 = '#8b92a5';
+const GRID = 'rgba(255,255,255,0.05)';
+Chart.defaults.color = T2;
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+// ── Category bar chart ─────────────────────────────
+new Chart(document.getElementById('catChart'), {
+  type: 'bar',
+  data: {
+    labels: ['FAMILY','GAME','TOOLS','BUSINESS','MEDICAL','PERSONALIZATION','PRODUCTIVITY','LIFESTYLE','FINANCE','SPORTS','COMMUNICATION','HEALTH_AND_FITNESS'],
+    datasets: [{
+      data: [1832,959,827,420,395,376,374,369,345,325,315,288],
+      backgroundColor: [
+        '#4f8ef7','#34d39a','#f7a234','#9b7ef7','#f7614f','#34c4d3',
+        '#f76eb2','#4f8ef7','#34d39a','#f7a234','#9b7ef7','#f7614f'
+      ],
+      borderRadius: 4,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { maxRotation: 35, font: { size: 10 } }, grid: { color: GRID } },
+      y: { grid: { color: GRID }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// ── Installs horizontal bar ────────────────────────
+new Chart(document.getElementById('installChart'), {
+  type: 'bar',
+  data: {
+    labels: ['GAME','COMMUNICATION','TOOLS','PRODUCTIVITY','SOCIAL','PHOTOGRAPHY','FAMILY','VIDEO_PLAYERS'],
+    datasets: [{
+      data: [13.88, 11.04, 8.00, 5.79, 5.49, 4.65, 4.43, 3.93],
+      backgroundColor: '#34d39a',
+      borderRadius: 4,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { color: GRID },
+        ticks: { callback: v => v + 'B', font: { size: 10 } }
+      },
+      y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+
+// ── Rating by category horizontal bar ─────────────
+new Chart(document.getElementById('ratingCatChart'), {
+  type: 'bar',
+  data: {
+    labels: ['EVENTS','EDUCATION','ART_AND_DESIGN','BOOKS_AND_REF','PERSONALIZATION','PARENTING','BEAUTY','GAME'],
+    datasets: [{
+      data: [4.44, 4.36, 4.36, 4.34, 4.33, 4.30, 4.28, 4.25],
+      backgroundColor: '#9b7ef7',
+      borderRadius: 4,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        min: 4.1, max: 4.55,
+        grid: { color: GRID },
+        ticks: { font: { size: 10 } }
+      },
+      y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+
+// ── Free vs Paid doughnut ──────────────────────────
+new Chart(document.getElementById('typeChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Free','Paid'],
+    datasets: [{
+      data: [8903, 756],
+      backgroundColor: ['#4f8ef7','#34d39a'],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString()} apps`
+        }
+      }
+    }
+  }
+});
+
+// ── Rating distribution bar ────────────────────────
+new Chart(document.getElementById('ratingDistChart'), {
+  type: 'bar',
+  data: {
+    labels: ['1 ★','2 ★','3 ★','4 ★','5 ★'],
+    datasets: [{
+      data: [20, 127, 571, 5776, 1702],
+      backgroundColor: ['#f7614f','#f7a234','#34c4d3','#4f8ef7','#34d39a'],
+      borderRadius: 4,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: GRID } }
+    }
+  }
+});
+
+// ── Sentiment bar chart ────────────────────────────
+new Chart(document.getElementById('sentChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Positive','Neutral','Negative'],
+    datasets: [{
+      data: [23998, 5163, 8271],
+      backgroundColor: ['#34d39a','#555f73','#f7614f'],
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: GRID } }
+    }
+  }
+});
+
+// ── Content rating doughnut ────────────────────────
+new Chart(document.getElementById('contentChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Everyone','Teen','Mature 17+','Everyone 10+','Other'],
+    datasets: [{
+      data: [7903, 1036, 393, 322, 5],
+      backgroundColor: ['#4f8ef7','#34d39a','#f7a234','#9b7ef7','#555f73'],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '58%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString()} apps`
+        }
+      }
+    }
+  }
+});
+
+// ── Top apps table ─────────────────────────────────
+const topApps = [
+  ['Facebook',        'SOCIAL',        4.1, '78.2M', '1B+'],
+  ['WhatsApp Messenger','COMMUNICATION',4.4, '69.1M', '1B+'],
+  ['Instagram',       'SOCIAL',        4.5, '66.6M', '1B+'],
+  ['Messenger',       'COMMUNICATION', 4.0, '56.6M', '1B+'],
+  ['Clash of Clans',  'GAME',          4.6, '44.9M', '100M+'],
+  ['Clean Master',    'TOOLS',         4.7, '42.9M', '500M+'],
+  ['Subway Surfers',  'GAME',          4.5, '27.7M', '1B+'],
+  ['YouTube',         'VIDEO_PLAYERS', 4.3, '25.7M', '1B+'],
+  ['Security Master', 'TOOLS',         4.7, '24.9M', '500M+'],
+  ['Clash Royale',    'GAME',          4.6, '23.1M', '100M+']
+];
+const catClass = {
+  SOCIAL:'b-social', GAME:'b-game', TOOLS:'b-tools',
+  COMMUNICATION:'b-comm', VIDEO_PLAYERS:'b-video'
+};
+const tbody = document.getElementById('appsBody');
+topApps.forEach(([app, cat, rating, reviews, installs], i) => {
+  const cl = catClass[cat] || 'b-tools';
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td class="rank-num">${String(i+1).padStart(2,'0')}</td>
+    <td><div class="app-name">${app}</div></td>
+    <td><span class="badge ${cl}">${cat}</span></td>
+    <td class="rating-val">${rating} ★</td>
+    <td class="review-count">${reviews}</td>
+    <td class="install-count">${installs}</td>
+  `;
+  tbody.appendChild(row);
+});
+</script>
+</body>
+</html>
