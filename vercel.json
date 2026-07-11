@@ -1,0 +1,18 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/Dashboard/playstore_analytics_dashboard.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/Dashboard/playstore_analytics_dashboard.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/Dashboard/playstore_analytics_dashboard.html"
+    }
+  ]
+}
